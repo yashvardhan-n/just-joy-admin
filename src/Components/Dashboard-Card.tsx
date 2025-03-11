@@ -1,9 +1,9 @@
-import React from "react";
+import React, { JSX } from "react";
 import { Paper, Box, Typography } from "@mui/material";
 
 interface DashboardCardProps {
   title: string;
-  value: number;
+  value: JSX.Element | number;
   icon: React.ReactNode;
   color: string;
 }
