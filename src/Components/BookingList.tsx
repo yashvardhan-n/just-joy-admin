@@ -7,6 +7,7 @@ import {
   SnackbarCloseReason,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
+import ImageModalComponent from './DeleteConfirmation'
 
 
 export enum BookingStatus {
@@ -36,17 +37,18 @@ interface BookingListProp {
 const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [deleteBooking , setDeleteBooking] = useState<Booking | null>(null);
   const [bookingsData, setBookingsData] = useState<Booking[]>([]);
 
   const [applyId, setApplyId] = useState<string>("");
   const [tempStatus, setTempStatus] = useState<Record<string, BookingStatus>>({});
   const [tempSelected, setTempSelected] = useState<Record<string, Booking>>({});
-  const [open, setOpen] = useState(false);
 
+  const [open, setOpen] = useState(false);
+  const [modalOpen , setModalOpen] = useState(false) ; 
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
 
   useEffect(() => {
@@ -113,8 +115,6 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
     }
   };
 
-  
-
   const handleClose = (
     event?: React.SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
@@ -159,19 +159,46 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
 
   const handleDeletebooking = async (booking: Booking) => {
     try {
-      setIsLoading(true);
       const id = booking._id;
+
       await axios.delete(`/api/selectedbooking/${id}`);
       setBookingsData((prevBookings) => prevBookings.filter(book => book._id !== id));
+
       onChangeStats();
-      alert("Booking Deleted")
+      setModalOpen(false)
+      setOpen(true) ; 
     }
     catch (error) {
       alert("Error Occurred While Deleting Booking");
     }
-    finally {
-      setIsLoading(false);
-    }
+  }
+
+  const invalidSelection = (bookingid : string , bookingstatus : string) => {
+    return !(tempSelected[bookingid]) || (tempStatus[bookingid] === bookingstatus) ? true : false;
+  }
+
+  const ApplyStyle = (bookingid : string , bookingstatus : string) =>{ 
+    return (invalidSelection(bookingid , bookingstatus))?
+        {
+          border: "1px solidrgb(43, 44, 41)" ,
+          backgroundColor: "skyblue" ,
+          color: "white",
+        }
+      : {
+          border: "1px solid green",
+          backgroundColor: "green",
+          color: "white",
+        }
+  }
+  
+  const SelectionStyle = (bookingid : string , bookingstatus : string) =>{ 
+    return (invalidSelection(bookingid , bookingstatus))?
+        {
+          backgroundColor: "White" ,
+        }
+      : {
+          backgroundColor: "rgb(156, 197, 74)",
+        }
   }
 
   return (
@@ -196,18 +223,20 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
             {bookingsData
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((booking) => (
-                <TableRow key={booking._id} style={{ backgroundColor: (!(tempSelected[booking._id]) || (tempStatus[booking._id] === booking.status)) ? "white" : "rgb(156, 197, 74)" }}>
+                <TableRow key={booking._id} style={ SelectionStyle(booking._id , booking.status) }>
                   <TableCell>{booking.name}</TableCell>
                   <TableCell>{booking.phone}</TableCell>
                   <TableCell>{booking.email}</TableCell>
                   <TableCell>
                     {new Date(booking.checkIn).toLocaleDateString()}
                   </TableCell>
+
                   <TableCell>
                     {new Date(booking.checkOut).toLocaleDateString()}
                   </TableCell>
 
                   <TableCell> {booking.guests} </TableCell>
+
                   <TableCell>
                     <Chip
                       label={tempStatus[booking._id] || booking.status}
@@ -217,24 +246,24 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
                       style={{ cursor: "pointer", borderRadius: '0%' }}
                     />
                   </TableCell>
+
                   <TableCell>${booking.totalAmount}</TableCell>
+
                   <TableCell>
-                    <IconButton size="small" color="error" onClick={() => { handleDeletebooking(booking) }}>
-                      {isLoading ? <CircularProgress size={24} className="spinner" color="inherit" /> : <DeleteIcon />}
+                    <IconButton size="small" color="error" onClick={() => {setDeleteBooking(booking) ,setModalOpen(true)}}>
+                      {<DeleteIcon />}
                     </IconButton>
                   </TableCell>
+
                   <TableCell>
-                    <Button onClick={() => handleApplyChanges(booking._id)} style={
-                      {
-                        border: (!(tempSelected[booking._id]) || (tempStatus[booking._id] === booking.status)) ? "1px solidrgb(43, 44, 41)" : "1px solid green",
-                        backgroundColor: (!(tempSelected[booking._id]) || (tempStatus[booking._id] === booking.status)) ? "skyblue" : "green",
-                        color: "white",
-                      }
-                    }
-                      disabled={(!(tempSelected[booking._id]) || (tempStatus[booking._id] === booking.status))}>
-                      {applyId === booking._id ? <CircularProgress size={18} /> : "Apply"}
+                    <Button onClick={() => 
+                        handleApplyChanges(booking._id)} 
+                        style={ApplyStyle(booking._id , booking.status)}
+                        disabled={(invalidSelection(booking._id , booking.status))}>
+                        {applyId === booking._id ? <CircularProgress size={18} /> : "Apply"}
                     </Button>
                   </TableCell>
+
                 </TableRow>
               ))}
           </TableBody>
@@ -252,6 +281,8 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
           setPage(0);
         }}
       />
+      {modalOpen && <ImageModalComponent onClose={() => setModalOpen(false)} onDelete = {() =>  {deleteBooking && handleDeletebooking(deleteBooking)}}/>}
+        
       {<Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -270,7 +301,7 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
           variant="filled"
           sx={{ width: '100%' }}
         >
-          Status Changed Successfully .
+          Changes Applied Successfully
         </Alert>
       </Snackbar>
 
