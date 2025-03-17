@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  const targetUrl = env.VITE_PROXY_SERVER || 'https://just-joy-backend.vercel.app';
+  const targetUrl = env.VITE_PROXY_SERVER;
   return {
     server: {
       proxy: {
@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
           secure: false,
         },
       },
+      host: true,
       cors: true,
       allowedHosts: true,
     },
