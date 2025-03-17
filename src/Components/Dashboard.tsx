@@ -21,6 +21,7 @@ interface DashboardStats {
   todayBookings: number;
 }
 
+const targetUrl = 'https://just-joy-backend.vercel.app';
 const Dashboard: React.FC = () => {
 
   const [stats , setStats] = useState<DashboardStats>({
@@ -35,7 +36,7 @@ const Dashboard: React.FC = () => {
     const BookedDataStats = async() =>{
       try {
         setIsLoading(true)  
-        const response = await axios.get('/api/stats');
+        const response = await axios.get(`${targetUrl}/api/stats`);
         setStats(response.data) ;
       } catch (error) {
         console.log("Error Occured While Fetching Booked Data") ;
@@ -50,7 +51,7 @@ const Dashboard: React.FC = () => {
   const handleUpdateStats = async() =>{
     try {
       setIsLoading(true)  
-      const response = await axios.get('/api/stats');
+      const response = await axios.get(`${targetUrl}/api/stats`);
       setStats(response.data) ;
     } catch (error) {
       console.log("Error Occured While Fetching Booked Data") ;

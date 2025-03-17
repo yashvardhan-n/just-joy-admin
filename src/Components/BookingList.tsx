@@ -34,6 +34,8 @@ interface BookingListProp {
   onChangeStats: () => void
 }
 
+const targetUrl = 'https://just-joy-backend.vercel.app';
+
 const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -50,11 +52,10 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
   const [modalOpen , setModalOpen] = useState(false) ; 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   
-
   useEffect(() => {
     const BookedData = async () => {
       try {
-        const response = await axios.get('/api/bookings');
+        const response = await axios.get(`${targetUrl}/api/bookings`);
         setBookingsData(response.data);
       }
       catch (error) {
@@ -68,7 +69,7 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
     if (!tempStatus[booking_id]) return;
     try {
       setApplyId(booking_id);
-      await axios.patch(`/api/selectedbooking/${booking_id}`, { status: tempStatus[booking_id] });
+      await axios.patch(`${targetUrl}/api/selectedbooking/${booking_id}`, { status: tempStatus[booking_id] });
       onChangeStats();
 
       setBookingsData((prevBookings) =>
@@ -161,7 +162,7 @@ const BookingsList: React.FC<BookingListProp> = ({ onChangeStats }) => {
     try {
       const id = booking._id;
 
-      await axios.delete(`/api/selectedbooking/${id}`);
+      await axios.delete(`${targetUrl}/api/selectedbooking/${id}`);
       setBookingsData((prevBookings) => prevBookings.filter(book => book._id !== id));
 
       onChangeStats();
