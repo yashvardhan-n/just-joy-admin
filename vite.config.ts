@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
           secure: false,
         },
       },
+      cors: true,
+      allowedHosts: true,
     },
     plugins: [react()],
   };
